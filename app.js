@@ -1,4 +1,4 @@
-// ------------Дэлгэцтэй ажиллах контроллор--------------
+// Дэлгэц
 var uiController = (function () {
   var DOMstrings = {
     inputType: ".add__type",
@@ -10,7 +10,7 @@ var uiController = (function () {
   return {
     getInput: function () {
       return {
-        type: document.querySelector(DOMstrings.inputType).value,
+        type: document.querySelector(DOMstrings.inputType).value, // exp, inc
         description: document.querySelector(DOMstrings.inputDescription).value,
         value: document.querySelector(DOMstrings.inputValue).value,
       };
@@ -19,45 +19,99 @@ var uiController = (function () {
     getDOMstrings: function () {
       return DOMstrings;
     },
+
+    addListItem: function (item, type) {
+      var html, list;
+      if (type === "inc") {
+        list = ".income__list";
+        html =
+          '<div class="item clearfix" id="income-%id%"><div class="item__description">$$DESCRIPTION$$</div><div class="right clearfix"><div class="item__value">$$VALUE$$</div><div class="item__delete">            <button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div>        </div></div>';
+      } else {
+        list = ".expenses__list";
+        html =
+          '<div class="item clearfix" id="expense-%id%"><div class="item__description">$$DESCRIPTION$$</div>          <div class="right clearfix"><div class="item__value">$$VALUE$$</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn">                <i class="ion-ios-close-outline"></i></button></div></div></div>';
+      }
+
+      html = html.replace("%id%", item.id);
+      html = html.replace("$$DESCRIPTION$$", item.description);
+      html = html.replace("$$VALUE$$", item.value);
+
+      document.querySelector(list).insertAdjacentHTML("beforeend", html);
+    },
   };
 })();
-// --------Санхүүтэй ажиллах контроллор---------------
+
+// -----  САНХҮҮ  ---------
 var financeController = (function () {
+  // private data
   var Income = function (id, description, value) {
     this.id = id;
     this.description = description;
     this.value = value;
   };
+
+  // private data
   var Expense = function (id, description, value) {
     this.id = id;
     this.description = description;
     this.value = value;
   };
 
+  // private data
   var data = {
-    allItems: {
+    items: {
       inc: [],
       exp: [],
     },
+
     totals: {
       inc: 0,
       exp: 0,
     },
   };
+
+  return {
+    addItem: function (type, desc, val) {
+      var item, id;
+
+      if (data.items[type].length === 0) id = 1;
+      else {
+        id = data.items[type][data.items[type].length - 1].id + 1;
+      }
+
+      if (type === "inc") {
+        item = new Income(id, desc, val);
+      } else {
+        item = new Expense(id, desc, val);
+      }
+
+      data.items[type].push(item);
+
+      return item;
+    },
+
+    seeData: function () {
+      return data;
+    },
+  };
 })();
-// --------Программын холбогч контроллор--------------
+
+// ---------ХОЛБОГЧ----------
 var appController = (function (uiController, financeController) {
   var ctrlAddItem = function () {
-    // 1. Оруулах өгөгдөлийг дэлгэцнээс олж авна.
-    console.log(uiController.getInput());
-    // 2. Олж авсан өгөгдүүлдээ санхүүгийн контроллерт дамжуулж тэнд хадгална.
-    // 3. Олж авсан өгөгдүүдээ вэб дээр тохирох хэсэгт нь гаргана.
-    // 4. Төсвийг тооцоолно.
-    // 5. Эцсийн үлдэгдэл тооцоог дэлгэц дээр гаргана.
+    var input = uiController.getInput();
+    var item = financeController.addItem(
+      input.type,
+      input.description,
+      input.value
+    );
+
+    uiController.addListItem(item, input.type);
   };
 
-  var setupEventListners = function () {
+  var setupEventListeners = function () {
     var DOM = uiController.getDOMstrings();
+
     document.querySelector(DOM.addBtn).addEventListener("click", function () {
       ctrlAddItem();
     });
@@ -72,7 +126,7 @@ var appController = (function (uiController, financeController) {
   return {
     init: function () {
       console.log("Application started...");
-      setupEventListners();
+      setupEventListeners();
     },
   };
 })(uiController, financeController);
